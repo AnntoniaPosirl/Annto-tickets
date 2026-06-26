@@ -1,0 +1,15 @@
+{
+  "name": "anntto-tickets",
+  "version": "1.0.0",
+  "description": "Anntonia Tickets",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.1",
+    "discord-html-transcripts": "^3.3.0",
+    "sqlite3": "^5.1.7"
+  }
+}
