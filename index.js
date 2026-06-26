@@ -60,3 +60,28 @@ client.once("ready",()=>{
 console.log(`${client.user.tag} Online`);
 
 });
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages
+  ],
+  partials: [Partials.Channel]
+});
+
+const TOKEN = "MTQ1MjI5Mzg4MzE5ODQ0MzY0Mw.GZh5RQ.LEprqnklR3prdCehwqp_zSezn3Ne7yq4L0QADI";
+
+client.once("ready", () => {
+  console.log(`${client.user.tag} đã online!`);
+
+  client.user.setActivity("Anntonia Market", {
+    type: 3 // Đang xem
+  });
+});
+
+client.login(TOKEN);
+
