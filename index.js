@@ -1,70 +1,53 @@
 const {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ChannelType,
-  PermissionFlagsBits,
-  AttachmentBuilder,
-  ActivityType
+Client,
+GatewayIntentBits,
+Partials,
+EmbedBuilder,
+ActionRowBuilder,
+ButtonBuilder,
+ButtonStyle,
+ChannelType,
+PermissionFlagsBits,
+ActivityType
 } = require("discord.js");
 
-const fs = require("fs");
-
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.DirectMessages
-  ],
-  partials: [Partials.Channel]
+intents:[
+GatewayIntentBits.Guilds,
+GatewayIntentBits.GuildMessages,
+GatewayIntentBits.GuildMembers,
+GatewayIntentBits.MessageContent
+],
+partials:[Partials.Channel]
 });
 
-// ===== CONFIG =====
-const TOKEN = "MTQ1MjI5Mzg4MzE5ODQ0MzY0Mw.GZh5RQ.LEprqnklR3prdCehwqp_zSezn3Ne7yq4L0QADI";
+const TOKEN="TOKEN_CỦA_BẠN";
 
-const FEEDBACK_CHANNEL = "1452651656440447066";
-const TICKET_CHANNEL = "1452314580314362018";
-const TRANSCRIPT_CHANNEL = "1518662178486489118";
-const SUPPORT_ROLE = "1518662174879252541";
-const TICKET_CATEGORY = "1518662187999170750";
+const PANEL_CHANNEL="1452314580314362018";
+const FEEDBACK_CHANNEL="1452651656440447066";
+const TRANSCRIPT_CHANNEL="1518662178486489118";
+const SUPPORT_ROLE="1518662174879252541";
+const TICKET_CATEGORY="1518662187999170750";
 
-// ==================
+let ticketCount=1;
 
-let counter = 1;
-
-function ticketName(user) {
-  return `ticket-${String(counter++).padStart(3, "0")}-${user.username.toLowerCase()}`;
+function ticketName(user){
+return `ticket-${String(ticketCount++).padStart(3,"0")}-${user.username.toLowerCase()}`;
 }
 
-function orderCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let end = "";
+client.once("ready",async()=>{
 
-  for (let i = 0; i < 4; i++) {
-    end += chars[Math.floor(Math.random() * chars.length)];
-  }
+console.log(`${client.user.tag} Online`);
 
-  return `ANT${Date.now()}${end}`;
-}
-
-client.once("ready", () => {
-  console.log(`${client.user.tag} đã online!`);
-
-  client.user.setActivity("Anntonia Market", {
-    type: ActivityType.Watching
-  });
+client.user.setActivity("Anntonia Market",{
+type:ActivityType.Watching
 });
-const panelEmbed = new EmbedBuilder()
+
+const channel=await client.channels.fetch(PANEL_CHANNEL);
+
+const embed=new EmbedBuilder()
 .setColor("#2ECC71")
-.setAuthor({
-  name: "AnntoniaMarket"
-})
+.setAuthor({name:"AnntoniaMarket"})
 .setTitle("AnntoniaMarket - Tickets panel")
 .setDescription(`
 <a:verified:1266676550925942825>**Sử Dụng Tickets Với Những Mục Đích Sau**<a:verified:1266676550925942825>
@@ -82,8 +65,162 @@ const panelEmbed = new EmbedBuilder()
 • <:owner:1518677469945663678>**Mọi quyền trong đây thuộc về <@1195292985416503347> và <@1302568518268616775>**
 
 <a:WumpusWavingHi:1310632445485256724>***Bọn tôi luôn hân hạnh chào đón bạn!***<a:WumpusWavingHi:1310632445485256724>
-`)
-.setImage("https://cdn.discordapp.com/attachments/1454148689017700423/1518866272400441365/file_00000000fbb0720984c3b64fbcd9d7de.png?ex=6a3f6e72&is=6a3e1cf2&hm=f564bcc103f263bf1bf5c5e56307b16f9bb3f38511699ca73c72103c83af2100&")
-.setFooter({
-  text: "Powered by Anntonia Market"
+`);
+
+const row=new ActionRowBuilder().addComponents(
+new ButtonBuilder()
+.setCustomId("open_ticket")
+.setLabel("Open a ticket!")
+.setStyle(ButtonStyle.Primary)
+);
+
+const msgs=await channel.messages.fetch({limit:5});
+
+const exists=msgs.some(x=>x.author.id===client.user.id&&x.components.length);
+
+if(!exists){
+
+await channel.send({
+embeds:[embed],
+components:[row]
+});
+
+}
+
+});
+
+client.login(TOKEN);
+client.on("interactionCreate", async (interaction) => {
+
+if (!interaction.isButton()) return;
+
+if (interaction.customId !== "open_ticket") return;
+
+const guild = interaction.guild;
+
+const channel = await guild.channels.create({
+
+name: ticketName(interaction.user),
+
+type: ChannelType.GuildText,
+
+parent: TICKET_CATEGORY,
+
+permissionOverwrites: [
+
+{
+
+id: guild.id,
+
+deny: [PermissionFlagsBits.ViewChannel]
+
+},
+
+{
+
+id: interaction.user.id,
+
+allow: [
+
+PermissionFlagsBits.ViewChannel,
+
+PermissionFlagsBits.SendMessages,
+
+PermissionFlagsBits.ReadMessageHistory
+
+]
+
+},
+
+{
+
+id: SUPPORT_ROLE,
+
+allow: [
+
+PermissionFlagsBits.ViewChannel,
+
+PermissionFlagsBits.SendMessages,
+
+PermissionFlagsBits.ReadMessageHistory,
+
+PermissionFlagsBits.ManageChannels
+
+]
+
+}
+
+]
+
+});
+
+const ticketEmbed = new EmbedBuilder()
+
+.setColor("#2ECC71")
+
+.setAuthor({
+
+name:"AnntoniaMarket"
+
+})
+
+.setTitle("AnntoniaMarket - Ticket")
+
+.setDescription(`
+
+***Xin chào ${interaction.user}***
+- **Shop xin chân thành cảm ơn bạn đã lựa chọn chúng tôi để phục vụ, hãy miêu tả vấn đề của bạn để được hỗ trợ sớm nhất có thể** <:shop:1513522050931753093>
+- **Việc bạn tạo ticket đồng nghĩa bạn đã đọc https://discord.com/channels/1338113997790249003/1377311158708469760 và https://discord.com/channels/1338113997790249003/1453217559041278003 **
+- **Hãy thoải mái trò chuyện như người nhà vì không có ai ăn thịt bạn cả!** 
+- **Hãy ping <@1195292985416503347> khi không có support nào rep bạn!**
+`);
+
+const buttons = new ActionRowBuilder()
+
+.addComponents(
+
+new ButtonBuilder()
+
+.setCustomId("claim")
+
+.setLabel("Claim")
+
+.setStyle(ButtonStyle.Success),
+
+new ButtonBuilder()
+
+.setCustomId("close")
+
+.setLabel("Close")
+
+.setStyle(ButtonStyle.Danger),
+
+new ButtonBuilder()
+
+.setCustomId("closereason")
+
+.setLabel("Close With Reason")
+
+.setStyle(ButtonStyle.Secondary)
+
+);
+
+await channel.send({
+
+content:`<@&${SUPPORT_ROLE}> ${interaction.user}`,
+
+embeds:[ticketEmbed],
+
+components:[buttons]
+
+});
+
+await interaction.reply({
+
+content:`Đã tạo ticket: ${channel}`,
+
+ephemeral:true
+
+});
+
 });
