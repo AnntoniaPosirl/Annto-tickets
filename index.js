@@ -434,3 +434,284 @@ await interaction.channel.delete();
 },5000);
 
 });
+client.on("interactionCreate", async (interaction) => {
+
+if (!interaction.isButton()) return;
+
+if (interaction.customId !== "finish_order") return;
+
+const orderId = `ANT${Date.now()}${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+
+const embed = new EmbedBuilder()
+.setColor("#2ECC71")
+.setTitle("📝 Đơn Hàng Hoàn Thành")
+.setDescription(`
+👋 Xin chào ${interaction.user}!
+
+📦 **Thông tin đơn hàng**
+
+**Mã đơn:**
+\`${orderId}\`
+
+━━━━━━━━━━━━━━━━━━
+
+📌 **Vui lòng feedback theo đúng định dạng dưới đây tại <#${FEEDBACK_CHANNEL}>**
+
+\`\`\`
++1 Legit <@1195292985416503347> TÊN_SẢN_PHẨM
+\`\`\`
+
+━━━━━━━━━━━━━━━━━━
+
+<a:warning:1518889805503660092>  **Lưu ý quan trọng:**
+- <:yessir:1355933596526973028> Feedback **Phải** đúng định dạng trên
+
+- <:mimu_star:818331024395206658> **Phải** tag tên người bán (<@1195292985416503347>)
+
+- <:noti:1319539787820171268>  Khuyến khích feedback kèm theo với ảnh, không có ảnh vẫn được
+
+- <a:X_redcross:1418865461008797787>  Không đúng định dạng hoặc không tag người bán → Feedback **KHÔNG HỢP LỆ**
+
+<:gems:1321382598479708240>  ***Cảm ơn bạn đã feedback và tin tưởng shop,mỗi lượt feedback của bạn sẽ góp phần nâng cao chất lượng shop a***<:gems:1338590815123017882>
+`)
+.setTimestamp();
+
+await interaction.user.send({
+embeds:[embed]
+});
+
+await interaction.reply({
+content:"✅ Đã gửi hướng dẫn feedback vào tin nhắn riêng của khách.",
+ephemeral:true
+});
+
+});
+
+client.on("messageCreate", async (message) => {
+
+if (message.author.bot) return;
+
+if (message.channel.id !== FEEDBACK_CHANNEL) return;
+
+const regex=/^\+1\s+legit\s+<@!?1195292985416503347>(.*)$/i;
+
+if(!regex.test(message.content.trim())) return;
+
+const embed=new EmbedBuilder()
+.setColor("#57F287")
+.setTitle("🎉 Feedback đã được ghi nhận!")
+.setDescription(`
+Cảm ơn ${message.author} đã feedback.
+
+🛡️ Bảo hành của bạn đã được kích hoạt.
+
+Chúc bạn sử dụng sản phẩm vui vẻ ❤️
+`)
+.setTimestamp();
+
+await message.reply({
+embeds:[embed]
+});
+
+});
+client.on("messageCreate", async (message) => {
+
+if (message.author.bot) return;
+
+if (!message.member.roles.cache.has(SUPPORT_ROLE)) return;
+
+if (!message.content.startsWith("!finish")) return;
+
+const member = message.channel.permissionOverwrites.cache.find(x =>
+x.id !== message.guild.id &&
+x.id !== SUPPORT_ROLE &&
+x.allow.has(PermissionFlagsBits.ViewChannel)
+);
+
+if (!member) {
+
+return message.reply("❌ Không tìm thấy khách hàng của ticket.");
+
+}
+
+const user = await client.users.fetch(member.id);
+
+const orderId = `ANT${Date.now()}${Math.random().toString(36).substring(2,6).toUpperCase()}`;
+
+const embed = new EmbedBuilder()
+
+.setColor("#2ECC71")
+
+.setTitle("📝 Đơn Hàng Hoàn Thành")
+
+.setDescription(`
+Xin chào ${user}!
+
+Đơn hàng của bạn đã hoàn thành.
+
+━━━━━━━━━━━━━━━━━━
+
+**Mã đơn**
+\`${orderId}\`
+
+━━━━━━━━━━━━━━━━━━
+
+Vui lòng vào <#${FEEDBACK_CHANNEL}> và gửi đúng định dạng:
+
+\`\`\`
++1 Legit <@1195292985416503347> TÊN_SẢN_PHẨM
+\`\`\`
+
+Sau khi feedback hợp lệ, bảo hành sẽ được kích hoạt.
+
+Cảm ơn bạn đã ủng hộ Anntonia Market ❤️
+`)
+
+.setTimestamp();
+
+await user.send({
+embeds:[embed]
+});
+
+await message.reply("✅ Đã gửi hướng dẫn feedback cho khách.");
+
+});
+client.on("messageCreate", async (message) => {
+
+if (message.author.bot) return;
+
+if (!message.member.roles.cache.has(SUPPORT_ROLE)) return;
+
+const args = message.content.split(" ");
+
+const cmd = args.shift().toLowerCase();
+
+if (cmd === "!rename") {
+
+const newName = args.join("-").toLowerCase();
+
+if (!newName) {
+
+return message.reply("❌ Dùng: !rename ten-moi");
+
+}
+
+await message.channel.setName(newName);
+
+return message.reply("✅ Đã đổi tên Ticket.");
+
+}
+
+if (cmd === "!add") {
+
+const member = message.mentions.members.first();
+
+if (!member) return message.reply("❌ Hãy tag người cần thêm.");
+
+await message.channel.permissionOverwrites.edit(member.id, {
+
+ViewChannel: true,
+
+SendMessages: true,
+
+ReadMessageHistory: true
+
+});
+
+return message.reply(`✅ Đã thêm ${member} vào Ticket.`);
+
+}
+
+if (cmd === "!remove") {
+
+const member = message.mentions.members.first();
+
+if (!member) return message.reply("❌ Hãy tag người cần xóa.");
+
+await message.channel.permissionOverwrites.delete(member.id);
+
+return message.reply(`✅ Đã xóa ${member} khỏi Ticket.`);
+
+}
+
+});
+client.on("messageCreate", async (message) => {
+
+if (message.author.bot) return;
+
+if (!message.member.roles.cache.has(SUPPORT_ROLE)) return;
+
+if (message.content.toLowerCase() !== "!close") return;
+
+const discordTranscripts = require("discord-html-transcripts");
+
+await message.reply("📄 Đang tạo transcript...");
+
+const attachment = await discordTranscripts.createTranscript(message.channel);
+
+const transcriptChannel = client.channels.cache.get(TRANSCRIPT_CHANNEL);
+
+if (transcriptChannel) {
+
+await transcriptChannel.send({
+
+content:`📄 Transcript | ${message.channel.name}`,
+
+files:[attachment]
+
+});
+
+}
+
+try {
+
+const customer = message.channel.permissionOverwrites.cache.find(x =>
+x.id !== message.guild.id &&
+x.id !== SUPPORT_ROLE &&
+x.allow.has(PermissionFlagsBits.ViewChannel)
+);
+
+if (customer) {
+
+const user = await client.users.fetch(customer.id);
+
+const embed = new EmbedBuilder()
+.setColor("#2ECC71")
+.setTitle("📝 Ticket đã được đóng")
+.setDescription(`
+Cảm ơn bạn đã sử dụng dịch vụ của **Anntonia Market**.
+
+📄 Transcript đã được đính kèm.
+
+Vui lòng vào <#${FEEDBACK_CHANNEL}> và gửi:
+
+\`\`\`
++1 Legit <@1195292985416503347> TÊN_SẢN_PHẨM
+\`\`\`
+
+Sau khi feedback hợp lệ, bảo hành sẽ được kích hoạt.
+`)
+.setTimestamp();
+
+await user.send({
+embeds:[embed],
+files:[attachment]
+});
+
+}
+
+} catch {}
+
+await message.channel.send("🔒 Ticket sẽ được xóa sau 5 giây...");
+
+setTimeout(async () => {
+
+try {
+
+await message.channel.delete();
+
+} catch {}
+
+}, 5000);
+
+});
