@@ -21,7 +21,7 @@ GatewayIntentBits.MessageContent
 partials:[Partials.Channel]
 });
 
-const TOKEN="MTQ1MjI5Mzg4MzE5ODQ0MzY0Mw.G7taeL.RaUNDfKn1FOGsmGHKoely7b2AA2hAmtGE-GkiE";
+const TOKEN = process.env.TOKEN;
 
 const PANEL_CHANNEL="1452314580314362018";
 const FEEDBACK_CHANNEL="1452651656440447066";
